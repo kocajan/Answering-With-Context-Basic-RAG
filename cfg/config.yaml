@@ -3,6 +3,15 @@
 # Flag for cloud vs local deployment
 use_cloud: False
 
+# TODO: Before using, uncomment and fill in the API keys and Custom Search Engine ID.
+# # API keys for external services
+# api_keys:
+#   gemini_api_key: "..."
+#   google_search_api_key: "..."
+
+# # Google Custom Search Engine ID
+# custom_search_engine_id: "..."
+
 # Settings for web search
 search_results:
   num_results: 5
