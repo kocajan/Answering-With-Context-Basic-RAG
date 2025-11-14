@@ -12,8 +12,6 @@ def main() -> None:
     # Load configuration
     config_directory_path = "cfg/"
     config = load_config(config_directory_path)
-    print(config)
-    input()
 
     # Define questions
     questions = [
