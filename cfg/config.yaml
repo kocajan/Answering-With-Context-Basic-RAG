@@ -1,0 +1,215 @@
+# Configuration file for Prompt-To-Query Sanity Check with ChromaDB
+
+# Flag for cloud vs local deployment
+use_cloud: False
+
+# Settings for web search
+search_results:
+  num_results: 5
+  timeout: 8
+
+# Text summarization settings
+summarization:
+  text_length_limit: 5000
+
+# Model configurations for local and cloud environments
+model:
+  local: "llama3:8b"
+  cloud: "gemini-2.5-flash"
+
+# Configuration for the vector index
+index:
+  collection_name: "query_index"
+  embedding_model_identifier: "all-MiniLM-L6-v2"
+  database_path: "/home/kocajan/magistr/Master-Thesis/Learning/General/Prompt-To-Query-Sanity-Check/Prompt-To-Query-Chromadb/data/chromadb/"
+
+# Parameters for context retrieval from the index
+context_retrieval:
+  top_k: 5
+  max_attempts: 3
+
+# System prompts for various stages of the pipeline
+system_prompts:
+  index_query_generation:
+    local: |
+      Convert the user question into a concise semantic search query suitable for embedding-based retrieval.
+      Rules:
+      - Output only the final query.
+      - No punctuation at the end.
+      - No explanations, no reasoning, no quotes.
+      - Use only terms that directly capture the information needs of the question.
+
+      Question: {question}
+    cloud: |
+      Convert the user question into a concise semantic search query suitable for embedding-based retrieval.
+      Rules:
+      - Output only the final query.
+      - No punctuation at the end.
+      - No explanations, no reasoning, no quotes.
+      - Use only terms that directly capture the information needs of the question.
+
+      Question: {question}
+  context_evaluation:
+    local: |
+      Evaluate whether the provided context contains enough information required to answer the stated QUESTION.
+      Formatting rules:
+      - First line: output EXACTLY one word, either "Sufficient" or "Insufficient".
+      - If the context is sufficient:
+          - output ONLY "Sufficient" on the first line and NOTHING else.
+      - If the context is insufficient:
+          - First line must be "Insufficient".
+          - After that, list ONLY the specific missing information needed to answer the question.
+          - No explanations, no reasoning, no bullets, no commentary.
+          - Do NOT answer the question.
+          - Output plain text describing only what information is missing.
+
+      You must follow the format precisely.
+
+      Decide based solely on the sufficiency of the CONTEXT to answer the following QUESTION - do not focus on any other aspects of the context.
+
+      QUESTION:
+      {question}
+
+      CONTEXT:
+      {context}
+    cloud: |
+      Evaluate whether the provided context contains all information required to answer the QUESTION.
+      Formatting rules:
+      - First line: output EXACTLY one word, either "Sufficient" or "Insufficient".
+      - If the context is sufficient:
+          - output ONLY "Sufficient" on the first line and NOTHING else.
+      - If the context is insufficient:
+          - First line must be "Insufficient".
+          - After that, list ONLY the specific missing information needed to answer the question.
+          - No explanations, no reasoning, no bullets, no commentary.
+          - Do NOT answer the question.
+          - Output plain text describing only what information is missing.
+
+      You must follow the format precisely.
+
+      QUESTION:
+      {question}
+
+      CONTEXT:
+      {context}
+  search_query_generation:
+    local: |
+      Generate an improved Google search query using the following inputs:
+      - The user's original question.
+      - The previous search query attempt. (If empty, ignore it.)
+      - The missing information identified by context evaluation. (If empty, ignore it.)
+
+      Rules:
+      - Output ONLY one single search query.
+      - No punctuation at the end.
+      - No explanations, no reasoning, no extra sentences.
+      - Do not mention the missing information explicitly; incorporate it into the query naturally.
+      - Make the query concise, factual, and optimized for web search.
+      - If the previous query or the missing information is empty, ignore it.
+
+      Original question:
+      {question}
+
+      Previous query:
+      {previous_query}
+
+      Missing information:
+      {missing_info}
+    cloud: |
+      Generate an improved Google search query using the following inputs:
+      - The user's original question.
+      - The previous search query attempt. (If empty, ignore it.)
+      - The missing information identified by context evaluation. (If empty, ignore it.)
+
+      Rules:
+      - Output ONLY one single search query.
+      - No punctuation at the end.
+      - No explanations, no reasoning, no extra sentences.
+      - Do not mention the missing information explicitly; incorporate it into the query naturally.
+      - Make the query concise, factual, and optimized for web search.
+      - If the previous query or the missing information is empty, ignore it.
+
+      Original question:
+      {question}
+
+      Previous query:
+      {previous_query}
+
+      Missing information:
+      {missing_info}
+  summarization:
+    local: |
+      Summarize the following text into a concise factual paragraph suitable for use as context for a model answering a question.
+
+      Rules:
+      - Output ONLY the summary paragraph(s).
+      - No titles, no introductions, no explanations, no notes.
+      - No bullet points, no numbering, no markdown.
+      - Write continuous, compact factual prose.
+      - Preserve key facts, entities, relationships, events, numbers, and definitions.
+      - Remove redundancy, filler, speculation, and irrelevant details.
+      - Do not add any information that is not explicitly present in the text.
+
+      Text:
+      {text}
+    cloud: |
+      Summarize the following text into a concise factual paragraph suitable for use as context for a model answering a question.
+
+      Rules:
+      - Output ONLY the summary paragraph(s).
+      - No titles, no introductions, no explanations, no notes.
+      - No bullet points, no numbering, no markdown.
+      - Write continuous, compact factual prose.
+      - Preserve key facts, entities, relationships, events, numbers, and definitions.
+      - Remove redundancy, filler, speculation, and irrelevant details.
+      - Do not add any information that is not explicitly present in the text.
+
+      Text:
+      {text}
+  answer_generation:
+    local: |
+      You must answer using exactly two lines.
+
+      Line 1:
+      Output either "Context sufficiency: Sufficient" or "Context sufficiency: Insufficient".
+      Decide this strictly based on whether the provided context explicitly contains all information required to answer the question.
+      You must treat the context as the ONLY source of truth. Do not rely on general knowledge.
+
+      Line 2:
+      - If the context is sufficient: answer the question in ONE short factual sentence, based only on the context.
+      - If the context is insufficient: output exactly "The context does not contain the required information."
+
+      Rules:
+      - Output EXACTLY two lines.
+      - Do not add anything else.
+      - Do not provide explanations or reasoning.
+      - Do not include quotes or formatting.
+
+      Context:
+      {context}
+
+      Question:
+      {question}
+    cloud: |
+      You must answer using exactly two lines.
+
+      Line 1:
+      Output either "Context sufficiency: Sufficient" or "Context sufficiency: Insufficient".
+      Decide this strictly based on whether the provided context explicitly contains all information required to answer the question.
+      You must treat the context as the ONLY source of truth. Do not rely on general knowledge.
+
+      Line 2:
+      - If the context is sufficient: answer the question in ONE short factual sentence, based only on the context.
+      - If the context is insufficient: output exactly "The context does not contain the required information."
+
+      Rules:
+      - Output EXACTLY two lines.
+      - Do not add anything else.
+      - Do not provide explanations or reasoning.
+      - Do not include quotes or formatting.
+
+      Context:
+      {context}
+
+      Question:
+      {question}
